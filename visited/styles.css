@@ -1,0 +1,18 @@
+/* Style for the container of the links */
+.link-container {
+    display: flex;
+    flex-wrap: wrap;           /* Allow the items to wrap to the next line */
+    justify-content: flex-start; /* Align the dots to the left */
+    padding: 20px;
+}
+
+/* Style for each individual link (the dot) */
+.dot {
+    font-size: 20px;
+    color: #4CAF50;           /* Pleasant green color */
+    pointer-events: none;     /* Make the link unclickable */
+    user-select: none;        /* Prevent text selection */
+}
+.dot:visited{
+    color:red
+}
