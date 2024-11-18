@@ -12,18 +12,49 @@
             background-color: #f0f0f0;
             overflow: hidden;
         }
+        #message-box {
+            z-index: 1;
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background-color:rgba(255, 0, 0, 0.8);
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 18px;
+            text-align: center;
+
+        }
+
+
+        #progress-container {
+            z-index: 1;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 20px;
+        }
+        
+        #progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: darkblue;
+        }
+
+
         #game-container {
             position: relative;
             width: 100%;
             height: 100vh;
             background-color: #87ceeb;
         }
+        
         .falling-object {
             position: absolute;
             font-size: 50px;
             pointer-events: initial;
             user-select: none;
-            color: #000;
         }
         #score {
             position: fixed;
@@ -36,49 +67,121 @@
             border-radius: 5px;
             z-index: 1;
         }
+        .falling-object div {
+            cursor: pointer;
+        }
+        .falling-object a {
+            text-decoration: none;
+            color: inherit;
+            pointer-events: none; /* Disable link interaction */
+            color:#87ceeb ;
+        }
+        a:visited{
+            color:red !important;
+        }
     </style>
 </head>
 <body>
     <div id="score">Score: 0</div>
-    <div id="game-container"></div>
+    <div id="message-box" hidden>You lost life! You get -7 points</div>
+
+    <div id="progress-container">
+        <div id="progress-bar"></div>
+    </div>
+
+    <div id="game-container">
+
+    </div>
 
     <script>
         const gameContainer = document.getElementById("game-container");
         const scoreDisplay = document.getElementById("score");
+        const progressBar = document.getElementById("progress-bar");
+        const messageBox = document.getElementById("message-box");
+
+
+        const visited = [];
+
+
         let score = 0;
+        let urls = []; // This will hold the URLs from the file
+        let objectIndex = 0; // To keep track of the object index
+
+        // Load URLs from /top-500.txt
+        fetch("/top-500.txt")
+            .then(response => response.text())
+            .then(data => {
+                urls = data.split("\n").filter(url => url.trim() !== "").map(x=>"https://"+x); // Populate the URLs array
+                startGame(); // Start the game after URLs are loaded
+            })
+            .catch(error => console.error("Error loading URLs:", error));
 
         // Helper function to create random falling objects
         function createFallingObject() {
-            const object = document.createElement("span");
-            object.textContent = randomCharacter();
-            object.classList.add("falling-object");
-            object.style.left = Math.random() * (window.innerWidth - 50) + "px";
-            object.style.top = "-50px";
+            const wrapper = document.createElement("div");
+            const link = document.createElement("a");
+            
+            // Assign URL based on the current index
+            if (Math.random() >= 0.25){
+                link.href = urls[objectIndex % urls.length]; 
+                objectIndex++; // Increment the index for the next object
+                updateProgressBar()
+            }
+            else{
+                link.href = location.href
+            }
 
-            gameContainer.appendChild(object);
+            wrapper.classList.add("falling-object");
+            link.textContent = randomCharacter();
+
+            // Add the <a> tag inside the <div>
+            wrapper.appendChild(link);
+            wrapper.style.left = Math.random() * (window.innerWidth - 50) + "px";
+            wrapper.style.top = "-50px";
+
+            gameContainer.appendChild(wrapper);
 
             // Animate the object falling
             let speed = Math.random() * 2 + 1; // Falling speed
             let interval = setInterval(() => {
-                const currentTop = parseFloat(object.style.top);
-                object.style.top = currentTop + speed + "px";
+                const currentTop = parseFloat(wrapper.style.top);
+                wrapper.style.top = currentTop + speed + "px";
 
                 // Check if object reaches the bottom
                 if (currentTop > window.innerHeight) {
                     clearInterval(interval);
-                    object.remove();
+                    wrapper.remove();
+                    if (link.href==location.href){
+                        minilose();
+                    }
                 }
             }, 20);
 
             // Click event to remove object
-            object.addEventListener("click", () => {
+            wrapper.addEventListener("click", () => {
                 clearInterval(interval);
-                object.remove();
+                if (link.href!=location.href){
+                    visited.push(link.href)
+                }
+                
+                wrapper.remove();
                 score++;
-                scoreDisplay.textContent = `Score: ${score}`;
+                updateScore()
             });
         }
-
+        
+        function updateProgressBar(){
+            const progress = (objectIndex / urls.length) * 100; 
+            progressBar.style.width = progress + "%"; 
+        }
+        function updateScore(){
+            scoreDisplay.textContent = `Score: ${score}`;
+        }
+        function minilose(){
+            messageBox.hidden = false;
+            score=score-7;
+            updateScore()
+        }
         // Helper function to get a random character
         function randomCharacter() {
             const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789☀☂★☺";
@@ -90,11 +193,14 @@
             createFallingObject();
 
             // Adjust frequency as needed
-            setTimeout(gameLoop, 1000);
+            
+            setTimeout(gameLoop, 450);
         }
 
-        // Start the game
-        gameLoop();
+        // Start the game loop only after URLs are loaded
+        function startGame() {
+            gameLoop();
+        }
     </script>
 </body>
 </html>
