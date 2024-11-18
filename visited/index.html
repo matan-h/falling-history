@@ -3,12 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Top 5000 Sites</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Catch the Falling Objects</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            overflow: hidden;
+        }
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            background-color: #87ceeb;
+        }
+        .falling-object {
+            position: absolute;
+            font-size: 50px;
+            pointer-events: initial;
+            user-select: none;
+            color: #000;
+        }
+        #score {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            font-size: 20px;
+            color: #fff;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1;
+        }
+    </style>
 </head>
 <body>
-    <div id="app"></div>
+    <div id="score">Score: 0</div>
+    <div id="game-container"></div>
 
-    <script src="main.js"></script>
+    <script>
+        const gameContainer = document.getElementById("game-container");
+        const scoreDisplay = document.getElementById("score");
+        let score = 0;
+
+        // Helper function to create random falling objects
+        function createFallingObject() {
+            const object = document.createElement("span");
+            object.textContent = randomCharacter();
+            object.classList.add("falling-object");
+            object.style.left = Math.random() * (window.innerWidth - 50) + "px";
+            object.style.top = "-50px";
+
+            gameContainer.appendChild(object);
+
+            // Animate the object falling
+            let speed = Math.random() * 2 + 1; // Falling speed
+            let interval = setInterval(() => {
+                const currentTop = parseFloat(object.style.top);
+                object.style.top = currentTop + speed + "px";
+
+                // Check if object reaches the bottom
+                if (currentTop > window.innerHeight) {
+                    clearInterval(interval);
+                    object.remove();
+                }
+            }, 20);
+
+            // Click event to remove object
+            object.addEventListener("click", () => {
+                clearInterval(interval);
+                object.remove();
+                score++;
+                scoreDisplay.textContent = `Score: ${score}`;
+            });
+        }
+
+        // Helper function to get a random character
+        function randomCharacter() {
+            const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789☀☂★☺";
+            return characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+
+        // Game loop
+        function gameLoop() {
+            createFallingObject();
+
+            // Adjust frequency as needed
+            setTimeout(gameLoop, 1000);
+        }
+
+        // Start the game
+        gameLoop();
+    </script>
 </body>
 </html>
