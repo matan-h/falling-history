@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,12 +13,35 @@
             background-color: #f0f0f0;
             overflow: hidden;
         }
+        #results {
+            /* display: none; */
+            width: 100%;
+            height: 100vh;
+            background-color: #f8f9fa;
+            color: #333;
+            text-align: center;
+            padding: 20px;
+        }
+        #results h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+        #results ul {
+            list-style: none;
+            padding: 0;
+        }
+        #results li {
+            font-size: 20px;
+            margin: 10px 0;
+        }
+
+
         #message-box {
             z-index: 1;
             position: fixed;
             top: 10px;
             right: 10px;
-            background-color:rgba(255, 0, 0, 0.8);
+            background-color: rgba(255, 0, 0, 0.8);
             color: #fff;
             padding: 10px;
             border-radius: 5px;
@@ -35,7 +59,7 @@
             width: 100%;
             height: 20px;
         }
-        
+
         #progress-bar {
             height: 100%;
             width: 0%;
@@ -49,13 +73,14 @@
             height: 100vh;
             background-color: #87ceeb;
         }
-        
+
         .falling-object {
             position: absolute;
             font-size: 50px;
             pointer-events: initial;
             user-select: none;
         }
+
         #score {
             position: fixed;
             top: 10px;
@@ -67,20 +92,29 @@
             border-radius: 5px;
             z-index: 1;
         }
+
         .falling-object div {
             cursor: pointer;
         }
+
         .falling-object a {
             text-decoration: none;
             color: inherit;
-            pointer-events: none; /* Disable link interaction */
-            color:#87ceeb ;
+            pointer-events: none;
+            /* Disable link interaction */
+            color: #87ceeb;
         }
-        a:visited{
-            color:red !important;
+
+        a:visited {
+            color: green !important;
+        }
+
+        .invert {
+            filter: invert(100%)
         }
     </style>
 </head>
+
 <body>
     <div id="score">Score: 0</div>
     <div id="message-box" hidden>You lost life! You get -7 points</div>
@@ -89,8 +123,9 @@
         <div id="progress-bar"></div>
     </div>
 
-    <div id="game-container">
+    <div id="game-container"></div>
 
+    <div id="results" hidden>
     </div>
 
     <script>
@@ -98,6 +133,7 @@
         const scoreDisplay = document.getElementById("score");
         const progressBar = document.getElementById("progress-bar");
         const messageBox = document.getElementById("message-box");
+        const results = document.getElementById("results");
 
 
         const visited = [];
@@ -111,7 +147,7 @@
         fetch("/top-500.txt")
             .then(response => response.text())
             .then(data => {
-                urls = data.split("\n").filter(url => url.trim() !== "").map(x=>"https://"+x); // Populate the URLs array
+                urls = data.split("\n").filter(url => url.trim() !== "").map(x => "https://" + x); // Populate the URLs array
                 startGame(); // Start the game after URLs are loaded
             })
             .catch(error => console.error("Error loading URLs:", error));
@@ -120,14 +156,14 @@
         function createFallingObject() {
             const wrapper = document.createElement("div");
             const link = document.createElement("a");
-            
+
             // Assign URL based on the current index
-            if (Math.random() >= 0.25){
-                link.href = urls[objectIndex % urls.length]; 
+            if (Math.random() >= 0.25) {
+                link.href = urls[objectIndex % urls.length];
                 objectIndex++; // Increment the index for the next object
                 updateProgressBar()
             }
-            else{
+            else {
                 link.href = location.href
             }
 
@@ -142,7 +178,9 @@
             gameContainer.appendChild(wrapper);
 
             // Animate the object falling
-            let speed = Math.random() * 2 + 1; // Falling speed
+            const pre = Math.max(Math.floor(score / 100) + 2, 2);
+
+            let speed = Math.random() * pre + (pre - 1); // Falling speed
             let interval = setInterval(() => {
                 const currentTop = parseFloat(wrapper.style.top);
                 wrapper.style.top = currentTop + speed + "px";
@@ -151,7 +189,7 @@
                 if (currentTop > window.innerHeight) {
                     clearInterval(interval);
                     wrapper.remove();
-                    if (link.href==location.href){
+                    if (link.href == location.href) {
                         minilose();
                     }
                 }
@@ -160,41 +198,80 @@
             // Click event to remove object
             wrapper.addEventListener("click", () => {
                 clearInterval(interval);
-                if (link.href!=location.href){
+                if (link.href != location.href) {
                     visited.push(link.href)
                 }
-                
+
                 wrapper.remove();
                 score++;
                 updateScore()
             });
         }
-        
-        function updateProgressBar(){
-            const progress = (objectIndex / urls.length) * 100; 
-            progressBar.style.width = progress + "%"; 
+
+        function updateProgressBar() {
+            const progress = (objectIndex / urls.length) * 100;
+            progressBar.style.width = progress + "%";
+            if (progress > 50) {
+                night()
+            }
+            else {
+                unnight()
+            }
         }
-        function updateScore(){
+        function updateScore() {
             scoreDisplay.textContent = `Score: ${score}`;
+
         }
-        function minilose(){
+        function night() {
+            gameContainer.classList.add("invert");
+        }
+        function unnight() {
+            if (gameContainer.classList.contains("invert")) {
+                gameContainer.classList.remove("invert")
+            }
+        }
+
+        function minilose() {
             messageBox.hidden = false;
-            score=score-7;
+            score = score - 7;
             updateScore()
         }
         // Helper function to get a random character
         function randomCharacter() {
-            const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789☀☂★☺";
+            // const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789☀☂★☺";
+            const characters = 'MATN☀☁☂☃★☆☉☎☮☯☸☺☼♔♕♖♗♘♙♡♢♤♧♬♻⚑⚖⚛⛇⛱⛾';
+
             return characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        function display_results() {
+            gameContainer.remove();
+            scoreDisplay.hidden = true;
+            messageBox.hidden = true
+            
+            results.hidden = false;
+            results.innerText = visited.join("\n -");
+            const elements = visited.map((url)=>{const x=document.createElement("li");x.textContent = url;return x})
+            const resultsList = document.createElement("ul")
+            elements.forEach(x=>resultsList.appendChild(x))
+
         }
 
         // Game loop
         function gameLoop() {
             createFallingObject();
+            createFallingObject();
+            createFallingObject();
+            if (objectIndex >= urls.length) {
+                display_results()
+                // TODO: slow down when an element approthes another element.
 
-            // Adjust frequency as needed
-            
-            setTimeout(gameLoop, 450);
+
+
+            }
+            else {
+
+                setTimeout(gameLoop, 450);
+            }
         }
 
         // Start the game loop only after URLs are loaded
@@ -203,4 +280,5 @@
         }
     </script>
 </body>
+
 </html>
