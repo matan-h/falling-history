@@ -13,6 +13,7 @@
             background-color: #f0f0f0;
             overflow: hidden;
         }
+
         #results {
             /* display: none; */
             width: 100%;
@@ -22,14 +23,17 @@
             text-align: center;
             padding: 20px;
         }
+
         #results h1 {
             font-size: 36px;
             margin-bottom: 20px;
         }
+
         #results ul {
             list-style: none;
             padding: 0;
         }
+
         #results li {
             font-size: 20px;
             margin: 10px 0;
@@ -152,13 +156,26 @@
             })
             .catch(error => console.error("Error loading URLs:", error));
 
+        function get_speed() {
+            const pre = Math.max(Math.floor(score / 100) + 2, 2);
+            const progress = (objectIndex / urls.length);
+            // y= log(x+1)*5
+
+            let speed = Math.log(progress+1)*5  + (pre - 1); // Falling speed
+            return speed
+
+        }
+
         // Helper function to create random falling objects
         function createFallingObject() {
+            //  TODO: make sure they arent created one on top of the other
+            // y= log(x+1)*5
             const wrapper = document.createElement("div");
             const link = document.createElement("a");
 
             // Assign URL based on the current index
-            if (Math.random() >= 0.25) {
+            // every 15% chance, create dummy packet
+            if (Math.random() >= 0.15) {
                 link.href = urls[objectIndex % urls.length];
                 objectIndex++; // Increment the index for the next object
                 updateProgressBar()
@@ -180,10 +197,9 @@
             // Animate the object falling
             const pre = Math.max(Math.floor(score / 100) + 2, 2);
 
-            let speed = Math.random() * pre + (pre - 1); // Falling speed
             let interval = setInterval(() => {
                 const currentTop = parseFloat(wrapper.style.top);
-                wrapper.style.top = currentTop + speed + "px";
+                wrapper.style.top = currentTop + get_speed() + "px";
 
                 // Check if object reaches the bottom
                 if (currentTop > window.innerHeight) {
@@ -247,12 +263,12 @@
             gameContainer.remove();
             scoreDisplay.hidden = true;
             messageBox.hidden = true
-            
+
             results.hidden = false;
             results.innerText = visited.join("\n -");
-            const elements = visited.map((url)=>{const x=document.createElement("li");x.textContent = url;return x})
+            const elements = visited.map((url) => { const x = document.createElement("li"); x.textContent = url; return x })
             const resultsList = document.createElement("ul")
-            elements.forEach(x=>resultsList.appendChild(x))
+            elements.forEach(x => resultsList.appendChild(x))
 
         }
 
@@ -260,7 +276,7 @@
         function gameLoop() {
             createFallingObject();
             createFallingObject();
-            createFallingObject();
+
             if (objectIndex >= urls.length) {
                 display_results()
                 // TODO: slow down when an element approthes another element.
