@@ -107,11 +107,28 @@
             pointer-events: none;
             /* Disable link interaction */
             color: #87ceeb;
+            /* note that alpha is rendered in both :visited and this section. (e.g. 100% alpha will be all time transparent) */
         }
 
-        a:visited {
+        .green a:visited {
             color: green !important;
         }
+
+        .red a:visited {
+            color: red !important;
+        }
+
+        .blue a:visited {
+            color: darkblue !important;
+        }
+
+        .gold a:visited {
+            color: gold !important;
+        }
+
+        /* a:visited {
+            color: green !important;
+        } */
 
         .invert {
             filter: invert(100%)
@@ -147,6 +164,11 @@
         let urls = []; // This will hold the URLs from the file
         let objectIndex = 0; // To keep track of the object index
 
+        let recentPositions = []; // Array to track recent X positions
+        const minSpacing = 100; // Minimum horizontal spacing between objects
+
+
+
         // Load URLs from /top-500.txt
         fetch("/top-500.txt")
             .then(response => response.text())
@@ -161,7 +183,7 @@
             const progress = (objectIndex / urls.length);
             // y= log(x+1)*5
 
-            let speed = Math.log(progress+1)*5  + (pre - 1); // Falling speed
+            let speed = Math.log(progress + 1) * 5 + (pre - 1); // Falling speed
             return speed
 
         }
@@ -171,6 +193,9 @@
             //  TODO: make sure they arent created one on top of the other
             // y= log(x+1)*5
             const wrapper = document.createElement("div");
+            wrapper.classList.add(randomColorClass())
+
+
             const link = document.createElement("a");
 
             // Assign URL based on the current index
@@ -189,7 +214,14 @@
 
             // Add the <a> tag inside the <div>
             wrapper.appendChild(link);
-            wrapper.style.left = Math.random() * (window.innerWidth - 50) + "px";
+            let x = Math.random() * (window.innerWidth - 50);
+            // let y = -50;
+
+            // Check for collisions with existing objects
+            let positionX = getValidPosition();
+            wrapper.style.left = positionX + "px";
+
+
             wrapper.style.top = "-50px";
 
             gameContainer.appendChild(wrapper);
@@ -223,6 +255,34 @@
                 updateScore()
             });
         }
+        function getValidPosition() {
+            let positionX;
+            let attempts = 0;
+            do {
+                positionX = Math.random() * (window.innerWidth - 50);
+                attempts++;
+            } while (!isPositionValid(positionX) && attempts < 50);
+
+            // Record the new position
+            recentPositions.push(positionX);
+            if (recentPositions.length > 10) {
+                recentPositions.shift(); // Limit memory by keeping only the last 10 positions
+            }
+
+            return positionX;
+        }
+
+        // Helper function to check if a position is valid
+        function isPositionValid(positionX) {
+            for (let recentPosition of recentPositions) {
+                if (Math.abs(recentPosition - positionX) < minSpacing) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+
 
         function updateProgressBar() {
             const progress = (objectIndex / urls.length) * 100;
@@ -258,6 +318,15 @@
             const characters = 'MATN☀☁☂☃★☆☉☎☮☯☸☺☼♔♕♖♗♘♙♡♢♤♧♬♻⚑⚖⚛⛇⛱⛾';
 
             return characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        function randomColorClass() {
+            const color_classes = ["blue","red",  "gold"]
+            const primes = [3, 5, 7,11]
+            let cls = color_classes.find((cls, i) => score % primes[i] == 0)
+            if (!cls || score==0) {
+                cls = "green"
+            }
+            return cls;
         }
         function display_results() {
             gameContainer.remove();
