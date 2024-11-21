@@ -359,3 +359,4 @@ hackthebox.com
 account.hackthebox.com/login
 hackerone.com
 bughunters.google.com
+csstricks.google.com
