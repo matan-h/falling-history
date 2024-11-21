@@ -162,7 +162,8 @@
 
         let score = 0;
         let urls = []; // This will hold the URLs from the file
-        let objectIndex = 0; // To keep track of the object index
+        let objectIndex = 0; // To keep track of the object index [i.e. the object url index currently spwned]
+        let progressIndex = 0; // To keep track of the latest object clicked/hided
 
         let recentPositions = []; // Array to track recent X positions
         const minSpacing = 100; // Minimum horizontal spacing between objects
@@ -173,11 +174,31 @@
         fetch("/top-500.txt")
             .then(response => response.text())
             .then(data => {
-                urls = data.split("\n").filter(url => url.trim() !== "").map(x => "https://" + x); // Populate the URLs array
+                urls = parse_data(data) // Populate the URLs array
                 startGame(); // Start the game after URLs are loaded
             })
             .catch(error => console.error("Error loading URLs:", error));
 
+        function parse_data(data) {
+            pre_urls = data.split("\n").filter(url => url.trim() !== "").map(x => x.includes("://") ? x : "https://" + x);
+
+            let i = 0;
+
+            while (i < pre_urls.length) {
+                // Generate a random number between 3 and 8
+                const randomStep = Math.floor(Math.random() * 6) + 3;
+                i += randomStep; // Move the index forward by the random step
+
+                if (i < pre_urls.length) {
+                    pre_urls.splice(i, 0,location.href); // Insert 'dummy' at the new index
+                }
+            }
+
+
+
+            return pre_urls
+
+        }
         function get_speed() {
             const pre = Math.max(Math.floor(score / 100) + 2, 2);
             const progress = (objectIndex / urls.length);
@@ -190,8 +211,6 @@
 
         // Helper function to create random falling objects
         function createFallingObject() {
-            //  TODO: make sure they arent created one on top of the other
-            // y= log(x+1)*5
             const wrapper = document.createElement("div");
             wrapper.classList.add(randomColorClass())
 
@@ -199,15 +218,13 @@
             const link = document.createElement("a");
 
             // Assign URL based on the current index
-            // every 15% chance, create dummy packet
-            if (Math.random() >= 0.15) {
-                link.href = urls[objectIndex % urls.length];
-                objectIndex++; // Increment the index for the next object
-                updateProgressBar()
-            }
-            else {
-                link.href = location.href
-            }
+            const url = urls[objectIndex]
+            if (url===undefined){return}
+            link.href = url;
+            objectIndex++; // Increment the index for the next object
+            console.log("creating object",objectIndex,"/",urls.length)
+            // updateProgressBar()
+            
 
             wrapper.classList.add("falling-object");
             link.textContent = randomCharacter();
@@ -237,6 +254,8 @@
                 if (currentTop > window.innerHeight) {
                     clearInterval(interval);
                     wrapper.remove();
+                    progressIndex++;
+                    updateProgressBar();
                     if (link.href == location.href) {
                         minilose();
                     }
@@ -252,6 +271,8 @@
 
                 wrapper.remove();
                 score++;
+                progressIndex++;
+                updateProgressBar()
                 updateScore()
             });
         }
@@ -285,7 +306,7 @@
 
 
         function updateProgressBar() {
-            const progress = (objectIndex / urls.length) * 100;
+            const progress = (progressIndex / urls.length) * 100;
             progressBar.style.width = progress + "%";
             if (progress > 50) {
                 night()
@@ -320,10 +341,10 @@
             return characters.charAt(Math.floor(Math.random() * characters.length));
         }
         function randomColorClass() {
-            const color_classes = ["blue","red",  "gold"]
-            const primes = [3, 5, 7,11]
+            const color_classes = ["blue", "red", "gold"]
+            const primes = [3, 5, 7, 11]
             let cls = color_classes.find((cls, i) => score % primes[i] == 0)
-            if (!cls || score==0) {
+            if (!cls || score == 0) {
                 cls = "green"
             }
             return cls;
@@ -334,24 +355,30 @@
             messageBox.hidden = true
 
             results.hidden = false;
-            results.innerText = visited.join("\n -");
-            const elements = visited.map((url) => { const x = document.createElement("li"); x.textContent = url; return x })
+            const unshaffeldElements = visited.map((url) => { const x = document.createElement("li"); x.textContent = url; return x })
+            // so:2450954:46545530
+            const elements = unshaffeldElements.map(value => ({ value, sort: Math.random() }))
+                .sort((a, b) => a.sort - b.sort)
+                .map(({ value }) => value)
+
+
             const resultsList = document.createElement("ul")
             elements.forEach(x => resultsList.appendChild(x))
+            results.appendChild(resultsList)
 
         }
 
         // Game loop
         function gameLoop() {
             createFallingObject();
-            createFallingObject();
 
-            if (objectIndex >= urls.length) {
+            if (progressIndex >= urls.length) {
                 display_results()
-                // TODO: slow down when an element approthes another element.
+                // TODO: chhange the yellow color 
+                // TODO: in about 60%, the game is too speedy and elements are not easy to click.
+                // TODO: add scrollbar to results view.
 
-
-
+                // 
             }
             else {
 
