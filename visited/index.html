@@ -12,6 +12,7 @@
             font-family: Arial, sans-serif;
             background-color: #f0f0f0;
         }
+
         /*  */
         #history-results {
             background: #fff;
@@ -41,7 +42,7 @@
 
         #history-results #history-list {
             list-style: none;
-            max-height: 200px;
+            max-height: 30vw;
             overflow-y: auto;
             padding: 0;
             border: 1px solid #ddd;
@@ -113,6 +114,39 @@
         }
 
 
+        #intro-label {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            color: #fff;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 2;
+            opacity: 0;
+            animation: fadeInOut 5s ease-in-out forwards;
+        }
+        @keyframes fadeInOut {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -60%);
+            }
+            10% {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -40%);
+            }
+        }
+
         #game-container {
             position: relative;
             width: 100%;
@@ -168,7 +202,7 @@
         .deeppink a:visited {
             color: deeppink !important;
         }
-        
+
 
         .invert {
             filter: invert(100%)
@@ -199,6 +233,7 @@
     </div>
 
     <div id="game-container"></div>
+    <div id="intro-label">Welcome to the History Game!<br>Catch the falling objects to score points!</div>
     <center>
         <div id="history-results" hidden>
             <header>
@@ -237,7 +272,7 @@
 
         // Load URLs from /top-500.txt
         fetch("/top-500.txt")
-        // fetch("/sample-500.txt")
+            // fetch("/sample-500.txt")
             .then(response => response.text())
             .then(data => {
                 urls = parse_data(data) // Populate the URLs array
@@ -259,10 +294,15 @@
                     pre_urls.splice(i, 0, location.href); // Insert 'dummy' at the new index
                 }
             }
+            // random sort. so:2450954:46545530
+            const urls = pre_urls.map(value => ({ value, sort: Math.random() }))
+                .sort((a, b) => a.sort - b.sort)
+                .map(({ value }) => value)
 
 
 
-            return pre_urls
+
+            return urls
 
         }
         function get_speed() {
@@ -270,7 +310,7 @@
             const progress = (objectIndex / urls.length);
             // y= log(x+1)*5
 
-            let speed = Math.log(progress + 1) * 3 + 1; // Falling speed
+            let speed = Math.log(progress + 1) * 3.5 + 1; // Falling speed
             return speed
 
         }
@@ -440,15 +480,8 @@
 
                 return x
             })
-            // so:2450954:46545530
-            // const elements = unshaffeldElements.map(value => ({ value, sort: Math.random() }))
-            //     .sort((a, b) => a.sort - b.sort)
-            //     .map(({ value }) => value)
 
-
-            // const resultsList = document.createElement("ul")
             elements.forEach(x => historyList.appendChild(x))
-            // results.appendChild(resultsList)
 
         }
 
