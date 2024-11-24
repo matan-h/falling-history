@@ -271,7 +271,7 @@
 
 
         // Load URLs from /top-500.txt
-        fetch("/top-500.txt")
+        fetch("./top-500.txt")
             // fetch("/sample-500.txt")
             .then(response => response.text())
             .then(data => {
@@ -281,6 +281,8 @@
             .catch(error => console.error("Error loading URLs:", error));
 
         function parse_data(data) {
+            const len = +((new URLSearchParams(location.search)).get("len")||0)
+
             pre_urls = data.split("\n").filter(url => url.trim() !== "").map(x => x.includes("://") ? x : "https://" + x);
 
             let i = 0;
@@ -295,9 +297,13 @@
                 }
             }
             // random sort. so:2450954:46545530
-            const urls = pre_urls.map(value => ({ value, sort: Math.random() }))
+            let urls = pre_urls.map(value => ({ value, sort: Math.random() }))
                 .sort((a, b) => a.sort - b.sort)
                 .map(({ value }) => value)
+                
+            if (!isNaN(len) && len > 10){
+                urls = urls.slice(0,len)
+            }
 
 
 
